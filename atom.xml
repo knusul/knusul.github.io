@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[TDD or not to Be]]></title>
+  <link href="http://knusul.github.io/atom.xml" rel="self"/>
+  <link href="http://knusul.github.io/"/>
+  <updated>2016-01-29T06:46:55+00:00</updated>
+  <id>http://knusul.github.io/</id>
+  <author>
+    <name><![CDATA[Your Name]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Raspberry PI as a Home Hotspot Powered by Telekom Hotspot]]></title>
+    <link href="http://knusul.github.io/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/"/>
+    <updated>2016-01-28T06:50:15+00:00</updated>
+    <id>http://knusul.github.io/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot</id>
+    <content type="html"><![CDATA[<p>If you are living in Germany and you have phone plan covering free Telekom Hotspot usage probably you wondered, like me if its possible to broadcast signal from hotspot to home.
+One function that prohibits us from using simple reapeter is the fact that Telekom hotspot has html username/password authentication. The hotspot deuthenticates the user when inactive and when token expires.
+The idea is to put 2 WIFI cards into raspberry PI. One will receive signal from hotspot. On another we will configure hostapd and dhcp server to broadacast signal at home. We will write simple script that authenticates user in Telekom hotspot using curl.</p>
+
+<ol>
+<li>Step is to get raspberry PI. I&rsquo;m using the B+ model that has 4 USB exists and microSD slot.</li>
+<li>Install Raspbian OS</li>
+<li>Configure raspberry PI</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt-get update
+</span><span class='line'>sudo apt-get -y install hostapd isc-dhcp-server iptables wpa_supplicant</span></code></pre></td></tr></table></div></figure>
+
+
+<p>edit the following files: <code>/etc/hostapd/hostapd.conf</code>,  <code>/etc/dhcp/dhcpd.conf</code>, <code>/etc/default/isc-dhcp-server</code>, <code>/etc/network/interfaces</code>:
+4. Enable packet forwarding on start by adding the line &ldquo;net.ipv4.ip_forward=1&rdquo; to  &ldquo; /etc/sysctl.conf&rdquo;
+5. Configure IP-Tables(I assume wlan1 is a interface connected to Telekom Hotspot.
+sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
+sudo iptables -A FORWARD -i wlan1 -o wlan0 -m state &ndash;state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i wlan0 -o wlan1 -j ACCEPT</p>
+
+<ol>
+<li>Save the rules: sh -c &ldquo;iptables-save > /etc/iptables.ipv4.nat&rdquo;</li>
+<li><p>Run dhcp server and hostapd:
+sudo update-rc.d hostapd enable
+sudo update-rc.d isc-dhcp-server enable</p></li>
+<li><p>You should be able now to connect to raspberry PI wifi network(wlan0) from home. But no internet yet.</p></li>
+<li>Now connect to telekom hotspot: sudo iwconfig wlan1 essid Telekom; sudo dhcpclient wlan1</li>
+<li></li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[AWS Lambda. The Bad Parts]]></title>
+    <link href="http://knusul.github.io/blog/2016/01/05/aws-lambda-the-bad-parts/"/>
+    <updated>2016-01-05T15:31:55+00:00</updated>
+    <id>http://knusul.github.io/blog/2016/01/05/aws-lambda-the-bad-parts</id>
+    <content type="html"><![CDATA[<p>Amazon about their Lambda service: &ldquo;AWS Lambda is a zero-administration compute platform for back-end web developers that runs your code for you in the AWS cloud and provides you with a fine-grained pricing structure&rdquo;
+I spend some time with a microservice-awslambda architecture. Here I share numerous problems I encountered:
+1) Testing/Staging env requires seperate lambda function. We can not deploy same lambda function with different version to different APIs.
+2) The Lambda environment is archaic: Node v0.9 without ECMA6 support and Python 2.7.
+3) Difficult to deploy Python with shared libraries. When deploying python function with precompiled shared library we have to build it on same architecture like AWS Lambda, otherwise it won&rsquo;t work. We can not simply deploy liblxml build on MacOSX. In order to compile linked libraries it&rsquo;s necessery to build them on ec2 instance and then deploy to Lambda. Seems like too much work for simple task.</p>
+
+<h1>Conclusion</h1>
+
+<p>There are great benefits in an architecture build on Lambda functions. Unfortunately it comes in a costs.
+It might work well for very simple services but when we need to create anything more complicated than &lsquo;hello world&rsquo; its wise to move to other solution. Maybe Dockeris a thing to go. If you want to share your thoughts about Lambda AWS architecture please comment.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Comparison of PDF Generation Libraries]]></title>
+    <link href="http://knusul.github.io/blog/2015/06/26/comparison-of-pdf-generation-libraries/"/>
+    <updated>2015-06-26T15:48:34+00:00</updated>
+    <id>http://knusul.github.io/blog/2015/06/26/comparison-of-pdf-generation-libraries</id>
+    <content type="html"><![CDATA[<p>Recently I investigated the possibilities of PDF generation from doc(x)
+documents. It came up that its not that trivial.
+The goal is to have separate application that will have api to perform conversions.</p>
+
+<h1>Example Usage:</h1>
+
+<p>Post: docx2pdf.tmh.io/templates/create?filename=name.docx # status: ok
+Get: doc2pdf.tmh.io/templates/1/pdf?placeholder1=value1&amp;placeholder2=value2  #document.pdf</p>
+]]></content>
+  </entry>
+  
+</feed>

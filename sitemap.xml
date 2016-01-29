@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>http://knusul.github.io/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/</loc>
+<lastmod>2016-01-28T06:50:15+00:00</lastmod>
+</url>
+<url>
+<loc>http://knusul.github.io/blog/2016/01/05/aws-lambda-the-bad-parts/</loc>
+<lastmod>2016-01-05T15:31:55+00:00</lastmod>
+</url>
+<url>
+<loc>http://knusul.github.io/blog/2015/06/26/comparison-of-pdf-generation-libraries/</loc>
+<lastmod>2015-06-26T15:48:34+00:00</lastmod>
+</url>
+<url>
+<loc>http://knusul.github.io/blog/archives/</loc>
+</url>
+<url>
+<loc>http://knusul.github.io/</loc>
+</url>
+</urlset>
