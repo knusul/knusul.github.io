@@ -118,8 +118,24 @@ sudo update-rc.d hostapd enable
 sudo update-rc.d isc-dhcp-server enable</p></li>
 <li><p>You should be able now to connect to raspberry PI wifi network(wlan0) from home. But no internet yet.</p></li>
 <li>Now connect to telekom hotspot: sudo iwconfig wlan1 essid Telekom; sudo dhcpclient wlan1</li>
-<li></li>
+<li>Move to your laptop and perform http Login with your Telekom username and password. In Chrome open console and in a network tab find the post to Telekom gateway.
+Click on that request and click &ldquo;save as curl command&rdquo; paste the command to a script and save on raspberry.
+Then write short script that will check internet connection and if there is no it will reauthenticate. Sth like this</li>
 </ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#!/bin/sh
+</span><span class='line'>while [ 1 ]; do
+</span><span class='line'>    sudo ping www.google.com -c 1 && echo "OK" || curl -v 'https://hotspot.t-mobile.net/wlan/rest/login' -H 'Origin: https://hotspot.t-mobile.net' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.8' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36' -H 'Content-Type: application/json;charset=UTF-8' -H 'Accept: application/json, text/plain, */*' -H 'Referer: https://hotspot.t-mobile.net/TD/hotspot/de_DE/index.html?origurl=http%3A%2F%2Fwww.kimeta.de%2FOfferDetail.aspx&ts=1451396580457' -H 'Cookie: 06847EADCEBFD2E920C1F12378924815.P2; oam.Flash.RENDERMAP.TOKEN=118ogwrec4' -H 'Connection: keep-alive' --data-binary '{"username":"phone-number@t-mobile.de","password":"password","rememberMe":true}' --compressed
+</span><span class='line'>    sleep 1
+</span><span class='line'>    done</span></code></pre></td></tr></table></div></figure>
+
+
 
 </div>
 
@@ -274,4 +290,3 @@ sudo update-rc.d isc-dhcp-server enable</p></li>
 
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
