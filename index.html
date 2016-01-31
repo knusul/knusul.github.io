@@ -109,18 +109,53 @@ The idea is to put 2 WIFI cards into raspberry PI. One will receive signal from 
 
 <p>edit the following files: <code>/etc/hostapd/hostapd.conf</code>,  <code>/etc/dhcp/dhcpd.conf</code>, <code>/etc/default/isc-dhcp-server</code>, <code>/etc/network/interfaces</code>:
 4. Enable packet forwarding on start by adding the line &ldquo;net.ipv4.ip_forward=1&rdquo; to  &ldquo; /etc/sysctl.conf&rdquo;
-5. Configure IP-Tables(I assume wlan1 is a interface connected to Telekom Hotspot.
-sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
-sudo iptables -A FORWARD -i wlan1 -o wlan0 -m state &ndash;state RELATED,ESTABLISHED -j ACCEPT
-sudo iptables -A FORWARD -i wlan0 -o wlan1 -j ACCEPT</p>
+5. Configure IP-Tables(I assume wlan1 is a interface connected to Telekom Hotspot.</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo iptables -A FORWARD -i wlan1 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo iptables -A FORWARD -i wlan0 -o wlan1 -j ACCEPT </span></code></pre></td></tr></table></div></figure>
+
 
 <ol>
-<li>Save the rules: sh -c &ldquo;iptables-save > /etc/iptables.ipv4.nat&rdquo;</li>
-<li><p>Run dhcp server and hostapd:
-sudo update-rc.d hostapd enable
-sudo update-rc.d isc-dhcp-server enable</p></li>
-<li><p>You should be able now to connect to raspberry PI wifi network(wlan0) from home. But no internet yet.</p></li>
-<li>Now connect to telekom hotspot: sudo iwconfig wlan1 essid Telekom; sudo dhcpclient wlan1</li>
+<li>Save the rules:</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sh -c iptables-save &gt; /etc/iptables.ipv4.nat</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Run dhcp server and hostapd:</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo update-rc.d hostapd enable</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo update-rc.d isc-dhcp-server enable </span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>You should be able now to connect to raspberry PI wifi network(wlan0) from home. But no internet yet.</li>
+<li>Now connect to telekom hotspot:</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo iwconfig wlan1 essid Telekom; sudo dhcpclient wlan1</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
 <li>Move to your laptop and perform http Login with your Telekom username and password. In Chrome open console and in a network tab find the post to Telekom gateway.
 Click on that request and click &ldquo;save as curl command&rdquo; paste the command to a script and save on raspberry.
 Then write short script that will check internet connection and if there is no it will reauthenticate. Sth like this</li>
