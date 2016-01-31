@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>'Comparison of PDF Generation Libraries - My Octopress Blog</title>
+  <meta name="author" content="Your Name">
+
+  
+  <meta name="description" content="Recently I investigated the possibilities of PDF generation from doc(x)
+documents. It came up that its not that trivial.
+The goal is to have separate &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://yoursite.com/blog/2014/10/03/comparison-of-pdf-generation-libraries">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My Octopress Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My Octopress Blog</a></h1>
+  
+    <h2>A blogging framework for hackers.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:yoursite.com" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">'Comparison of PDF Generation Libraries</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-03T16:56:43+02:00" pubdate data-updated="true">Oct 3<span>rd</span>, 2014</time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Recently I investigated the possibilities of PDF generation from doc(x)
+documents. It came up that its not that trivial.
+The goal is to have separate application that will have api to perform conversions.</p>
+
+<p>Example usage:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Post: docx2pdf.tmh.io/templates/create?filename=name.docx # status: ok,
+</span><span class='line'>template_id: 1
+</span><span class='line'>Get: doc2pdf.tmh.io/templates/1/pdf?placeholder1=value1&placeholder2=value2  #document.pdf</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I used
+<a href="/downloads/source_file.docx"> this</a> document as an
+input for further conversions.
+The following table presents the results:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <th>Tool</th>
+      <th >Adventages</th>
+      <th >Disadventages</th>
+      <th >Generated Samples</th>
+      <th >Opinion</th>
+    </tr>
+    <tr>
+    <td><a href='https://github.com/plutext/docx4j'> docx4j </a></td>
+    <td >
+    <ul>
+      <li>best quality</li>
+      </li>sophisticated</li>
+      <li>very matured</li>
+    </ul>
+    </td>
+      <td >
+      <ul>
+        <li>Sophisticated</li>
+        <li>devs need to know java to maitain</li>
+        <li>expensive to start with</li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+      <li>
+      <a href="/downloads/docx4j_with_placeholders.pdf"> example</a>
+      </li>
+      <li>
+      <a href="/downloads/docx4j_conversion_quality.pdf"> second example</a>
+      </li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+        <li>
+        The left/right arrows is example are styled wrongly.
+        </li>
+        <li>
+        Beside that it looks like docx4j offers best conversion
+        </li>
+        <li>
+        Probably would be robust solution
+        </li>
+      </ul>
+      </td>
+    </tr>
+    <tr>
+    <td><a href='http://www.aspose.com/'> aspose </a></td>
+    <td >
+    </td>
+      <td >
+      <ul>
+        <li>can not create MergeField placeholders in LibreOffice.
+        Seems that it only works on MS Office</li>
+        <li>devs need to know java to maitain</li>
+        <li>paid and expensive</li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+      <li>
+      <a href="/downloads/aspose_conversion_quality.pdf"> example</a>
+      </li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+        <li>
+        The left/right arrows is example are styled wrongly.
+        </li>
+        <li>
+        Beside that it looks like docx4j offers best conversion
+        </li>
+        <li>
+        Probably would be robust solution
+        </li>
+      </ul>
+      </td>
+    </tr>
+
+    <tr>
+    <td><a href='http://www.docmosis.com/'> docmosis </a></td>
+    <td >
+    <ul>
+      <li>
+        No codding Required
+      </li>
+      <li>
+        Provides exact needed functionality
+      </li>
+    </ul>
+    </td>
+      <td >
+      <ul>
+        <li>
+        Not possible to add new features
+        </li>
+        <li>paid service</li>
+        <li>maybe good to start with to discover requirements</li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+      <li>
+      <a href="/downloads/docmosis_conversion_quality.pdf"> example</a>
+      </li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+        <li>
+          LibreOffice in the backend
+        </li>
+        <li>
+        Beside that it looks like docx4j offers best conversion
+        </li>
+        <li>
+        Probably would be robust solution
+        </li>
+      </ul>
+      </td>
+    </tr>
+    <tr>
+    <td><a href='https://github.com/ricn/libreconv/'> libreconv </a></td>
+    <td >
+    <ul>
+      <li>
+        ruby library depending on libreoffice
+      </li>
+      <li>
+        easy to use
+      </li>
+      <li>
+        easy to maintain with ruby team
+      </li>
+    </ul>
+    </td>
+      <td >
+      <ul>
+        <li>
+        Requires tweaks with libreoffice version.
+        </li>
+        <li>Sometimes fails silently on conversion</li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+      <li>
+      <a href="/downloads/libreconv_conversion_quality.pdf"> example</a>
+      </li>
+      </ul>
+      </td>
+      <td>
+      <ul>
+        <li>
+          Formatting and text overlapping issues
+        </li>
+      </ul>
+      </td>
+    </tr>
+    <tr>
+    <td><a href='http://markitup.jaysalvat.com'> markup editor</a>
+    +
+    <a href='https://github.com/Shopify/liquid'> liquid  </a>
+    </td>
+    <td >
+    <ul>
+      <li>
+      html2pdf conversion has wide support in Ruby
+      </li>
+    </ul>
+    </td>
+      <td>
+      <ul>
+        <li>
+        does not work with docx
+        </li>
+        <li>limited formatting capabilities.</li>
+      </ul>
+      </td>
+      <td >
+      </td>
+      <td>
+      <ul>
+        <li>
+          Risky to implement. Possible other problems on the way
+        </li>
+      </ul>
+      </td>
+  </tbody>
+</table>
+
+
+
+
+<p>
+We decided to go with aspose library because it is handy to use and conversion
+quality is not that bad. Some developers running on Ubuntu will have problems
+working with placeholders but its not intended to do so. The documents will be
+upload by POs working on Windows.
+</p>
+
+
+<p>
+If the Apose price is not affordable to you or you want to work with
+LibreOffice go for docx4j.
+</p>
+
+
+<p>
+The solutions based on LibreOffice are a quick hit. In many cases the quality
+will be good enough.
+</p>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Your Name</span></span>
+
+      
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-10-03T16:56:43+02:00" pubdate data-updated="true">Oct 3<span>rd</span>, 2014</time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/conversion/'>conversion</a>, <a class='category' href='/blog/categories/pdf/'>pdf,</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://yoursite.com/blog/2014/10/03/comparison-of-pdf-generation-libraries/" data-via="" data-counturl="http://yoursite.com/blog/2014/10/03/comparison-of-pdf-generation-libraries/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/10/03/comparison-of-pdf-generation-libraries/">'Comparison of PDF Generation Libraries</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Your Name -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

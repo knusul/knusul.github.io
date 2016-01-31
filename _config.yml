@@ -5,7 +5,7 @@
 url: http://knusul.github.io
 title: TDD or not to Be
 subtitle: Developers journey to clean code.
-author: Your Name
+author: Jakub Nieznalski
 simple_search: https://www.google.com/search
 description:
 
@@ -91,7 +91,7 @@ delicious_user:
 delicious_count: 3
 
 # Disqus Comments
-disqus_short_name: knusul
+disqus_short_name: tddornottobe
 disqus_show_comment_count: true
 
 # Google Analytics
