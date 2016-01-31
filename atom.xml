@@ -4,10 +4,10 @@
   <title><![CDATA[TDD or not to Be]]></title>
   <link href="http://knusul.github.io/atom.xml" rel="self"/>
   <link href="http://knusul.github.io/"/>
-  <updated>2016-01-31T10:31:04+00:00</updated>
+  <updated>2016-01-31T11:18:43+00:00</updated>
   <id>http://knusul.github.io/</id>
   <author>
-    <name><![CDATA[Your Name]]></name>
+    <name><![CDATA[Jakub Nieznalski]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
@@ -68,7 +68,7 @@ Then write short script that will check internet connection and if there is no i
 
 
 <p>Put the script in monit or run with nohup in raspberry pi
-Error processing input, expected syntax: {% img [class name(s)] [http[s]:/]/path/to/image [width [height]] [title text | &ldquo;title text&rdquo; [&ldquo;alt text&rdquo;]] %}</p>
+<img src="http://knusul.github.io/images/raspberry.jpeg"></p>
 ]]></content>
   </entry>
   
