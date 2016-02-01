@@ -4,7 +4,7 @@
   <title><![CDATA[TDD or not to Be]]></title>
   <link href="http://knusul.github.io/atom.xml" rel="self"/>
   <link href="http://knusul.github.io/"/>
-  <updated>2016-01-31T11:26:02+00:00</updated>
+  <updated>2016-02-01T16:08:58+00:00</updated>
   <id>http://knusul.github.io/</id>
   <author>
     <name><![CDATA[Jakub Nieznalski]]></name>
@@ -12,6 +12,29 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Modifing AWS Gateway Output Parameters]]></title>
+    <link href="http://knusul.github.io/blog/2016/02/01/modifing-aws-gateway-output-parameters/"/>
+    <updated>2016-02-01T16:05:00+00:00</updated>
+    <id>http://knusul.github.io/blog/2016/02/01/modifing-aws-gateway-output-parameters</id>
+    <content type="html"><![CDATA[<p>Maybe you want to hide unnecessery parameters from api or you want to modify the keys. It&rsquo;s straightforawrd with amazon gateway but it took me some time to find how to do it.
+Go to AWS Gateway -> Your api -> Integration Response -> Response template and change &ldquo;passthru&rdquo; to sth like</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#set($inputRoot = $input.path('$'))
+</span><span class='line'>{
+</span><span class='line'>  "listings" : $inputRoot.items
+</span><span class='line'>  }
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will strip all other keys in a response dict and replace it with one key that&rsquo;s the value of original &lsquo;items&rsquo; key. Whoila!</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Raspberry PI as a Home Hotspot Powered by Telekom Hotspot]]></title>

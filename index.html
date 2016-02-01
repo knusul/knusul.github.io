@@ -9,7 +9,7 @@
   <meta name="author" content="Jakub Nieznalski">
 
   
-  <meta name="description" content="If you are living in Germany and you have phone plan covering free Telekom Hotspot usage probably you wondered, like me if its possible to broadcast &hellip;">
+  <meta name="description" content="Maybe you want to hide unnecessery parameters from api or you want to modify the keys. It&rsquo;s straightforawrd with amazon gateway but it took me &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +65,52 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-01T16:05:00+00:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>4:05 pm</span></time>
+        
+           | <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/#disqus_thread"
+             data-disqus-identifier="http://knusul.github.io/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Maybe you want to hide unnecessery parameters from api or you want to modify the keys. It&rsquo;s straightforawrd with amazon gateway but it took me some time to find how to do it.
+Go to AWS Gateway -> Your api -> Integration Response -> Response template and change &ldquo;passthru&rdquo; to sth like</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>#set($inputRoot = $input.path('$'))
+</span><span class='line'>{
+</span><span class='line'>  "listings" : $inputRoot.items
+</span><span class='line'>  }
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This will strip all other keys in a response dict and replace it with one key that&rsquo;s the value of original &lsquo;items&rsquo; key. Whoila!</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -274,6 +320,10 @@ Get: doc2pdf.tmh.io/templates/1/pdf?placeholder1=value1&amp;placeholder2=value2 
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/">Raspberry PI as a Home Hotspot Powered by Telekom Hotspot</a>
