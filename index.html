@@ -9,7 +9,8 @@
   <meta name="author" content="Jakub Nieznalski">
 
   
-  <meta name="description" content="Maybe you want to hide unnecessery parameters from api or you want to modify the keys. It&rsquo;s straightforawrd with amazon gateway but it took me &hellip;">
+  <meta name="description" content="There is great article how to configure centralized logging for docker with cloudwatch: 1
+https://blogs.aws.amazon.com/application-management/post/ &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +66,112 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/22/logging-with-docker/">Logging With Docker</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-22T00:00:00+00:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>12:00 am</span></time>
+        
+           | <a href="/blog/2016/02/22/logging-with-docker/#disqus_thread"
+             data-disqus-identifier="http://knusul.github.io/blog/2016/02/22/logging-with-docker/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>There is great article how to configure centralized logging for docker with cloudwatch:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>https://blogs.aws.amazon.com/application-management/post/TxFRDMTMILAA8X/Send-ECS-Container-Logs-to-CloudWatch-Logs-for-Centralized-Monitoring</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It assumes that the application can send logs to other container running rsyslog.
+We will extend the example to work with locally saved logs.
+In order to make it work we need to:</p>
+
+<p>1) Create one container that will configure cloudwatch and rsyslog that listen to the events.</p>
+
+<p>2) Configure rsyslog on second devise that will listen to file changes in logs folder and will send logs to second rsyslog service running on another machine</p>
+
+<p>I decided to create another rsyslog agent running together with my application because I&rsquo;m reusing the docker cloudwatch container.</p>
+
+<p>First lets remove /dev/xconsole from rsyslog config. It breaks the rsyslog because most docker images does not have dev/xconsole.
+Open aws cloudwatch ecs project and edit Dockerfile</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>RUN rm /etc/rsyslog.d/50-default.conf</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next we need to configure rsyslog on our app machine. We need rsyslog version > 8.15.0 to use wildcard imfile as a log source(see rsyslog.conf):</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>RUN apt-get update
+</span><span class='line'>RUN apt-get -y install libestr-dev  liblogging-stdlog-dev  libgcrypt-dev uuid-dev libjson0-dev  libz-dev
+</span><span class='line'>RUN wget http://www.rsyslog.com/files/download/rsyslog/rsyslog-8.16.0.tar.gz
+</span><span class='line'>RUN tar xvzf rsyslog-8.16.0.tar.gz
+</span><span class='line'>RUN cd rsyslog-8.16.0 && ./configure --enable-imfile && make && make install
+</span><span class='line'>COPY rsyslog.conf /etc/rsyslog.conf
+</span><span class='line'>RUN pip install supervisor
+</span><span class='line'>COPY supervisord.conf /usr/local/etc/supervisord.conf
+</span><span class='line'>CMD ["/usr/local/bin/supervisord"]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>supervisord.conf is pretty simply:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[supervisord]
+</span><span class='line'>nodaemon=true
+</span><span class='line'>
+</span><span class='line'>[program:rsyslogd]
+</span><span class='line'>command=/usr/local/sbin/rsyslogd -n
+</span><span class='line'>
+</span><span class='line'>[program:awslogs]
+</span><span class='line'>command=your-app-with-logs
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>rsyslog.conf sends logs written to file to rsyslog on machine running cloudwatch agent</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>module(load="imfile")
+</span><span class='line'>input(type="imfile" file="/usr/src/app/logs/location/*.log" tag="spider_locations" facility="local6")</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -320,6 +427,10 @@ Get: doc2pdf.tmh.io/templates/1/pdf?placeholder1=value1&amp;placeholder2=value2 
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/02/22/logging-with-docker/">Logging With Docker</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a>
