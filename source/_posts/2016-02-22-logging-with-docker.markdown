@@ -1,6 +1,6 @@
 ---
 layout: post
-title: ""Logging with Docker""
+title: "Logging with Docker"
 date: 2016-02-22 16:59:05 +0100
 comments: true
 categories: docker

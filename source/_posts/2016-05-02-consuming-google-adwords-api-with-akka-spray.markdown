@@ -1,9 +1,9 @@
 ---
 layout: post
-title: ""Consuming Google AdWords Api with Akka Spray""
+title: "Consuming Google AdWords Api with Akka Spray"
 date: 2016-05-02 19:45:22 +0200
 comments: true
-categories:  spray, scala, adwords, api
+categories:  [spray, scala, adwords, api]
 ---
 
 Google AdWords Api is a very tricky beast when under heavy use.
