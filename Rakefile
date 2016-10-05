@@ -266,7 +266,7 @@ multitask :push do
     system "git commit -m \"#{message}\""
    # system "cp comparison_index.html public/blog/2015/06/26/comparison-of-pdf-generation-libraries/index.html"
     puts "\n## Pushing generated #{deploy_dir} website"
-    Bundler.with_clean_env { system "git push origin #{deploy_branch}" }
+    Bundler.with_clean_env { system "git push origin +#{deploy_branch}" }
     puts "\n## Github Pages deploy complete"
   end
 end
