@@ -1,0 +1,752 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Consuming Google AdWords Api With Akka Spray - TDD or not to Be</title>
+  <meta name="author" content="Jakub Nieznalski">
+
+  
+  <meta name="description" content="Google AdWords Api is a very tricky beast when under heavy use.
+When you send too many requests per minute you get banned for 30s. Moreover the &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="TDD or not to Be" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44042083-3']);
+    _gaq.push(['_trackPageview']);
+    _gaq.push(['_setDomainName','github.io']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">TDD or not to Be</a></h1>
+  
+    <h2>Developers journey to clean code.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="knusul.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Consuming Google AdWords Api With Akka Spray</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-05-02T17:45:22+00:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>5:45 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://knusul.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Google AdWords Api is a very tricky beast when under heavy use.
+When you send too many requests per minute you get banned for 30s. Moreover the amount of queries that you cam perform varies durning the day.
+I found consuming Google AdWords Api a perfect use case for Scala Akka and Spray frameworks.
+Please take into account I&rsquo;m beginer Scala programmer and it&rsquo;s one of my very first projects in that language.
+We will build Spray Api that will accept json list of keywords, adWords locationId and languageId and we return the keywords enchanced with targetingIdea and trafficEstiamtor service data.
+We use throttle actor(<a href="http://doc.akka.io/docs/akka/snapshot/contrib/throttle.html">http://doc.akka.io/docs/akka/snapshot/contrib/throttle.html</a>) to limit amount of queries to adWords Api.</p>
+
+<ol>
+<li>Start new Spray project like described at: <code>https://github.com/spray/spray-template/tree/on_spray-can_1.3</code></li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'> git clone git://github.com/spray/spray-template.git adwords-project</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Add the following libraries to build.sbt</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'> "com.typesafe.akka" %% "akka-contrib" % akkaV,
+</span><span class='line'> "io.spray" %%  "spray-json" % "1.3.2",
+</span><span class='line'> "com.google.api-ads" % "ads-lib" % "2.11.0" exclude("commons-beanutils", "commons-beanutils"),
+</span><span class='line'> "com.google.api-ads" % "adwords-axis" % "2.11.0" exclude("commons-beanutils", "commons-beanutils"),
+</span><span class='line'> "commons-beanutils" % "commons-beanutils" % "1.9.2",
+</span><span class='line'> "com.google.http-client" % "google-http-client-gson" % "1.21.0",
+</span><span class='line'> "com.google.inject" % "guice" % "4.0",
+</span><span class='line'> "org.slf4j" % "slf4j-simple" % "1.7.5",
+</span><span class='line'> "javax.activation"  % "activation"  % "1.1.1"
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Write JSON converter
+We want to return json, and we need to convert adWords api response to json
+In order to do that we write json converter:</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>implicit object AnyJsonFormat extends JsonFormat[Any] {
+</span><span class='line'>    def write(x: Any): JsValue = x match {
+</span><span class='line'>      case n: Int =&gt; JsNumber(n)
+</span><span class='line'>      case l: Long =&gt; JsNumber(l)
+</span><span class='line'>      case d: Double =&gt; JsNumber(d)
+</span><span class='line'>      case f: Float =&gt; JsNumber(f.toDouble)
+</span><span class='line'>      case s: String =&gt; JsString(s)
+</span><span class='line'>      case x: Seq[_] =&gt; seqFormat[Any].write(x)
+</span><span class='line'>      case m: Map[_, _] if m.isEmpty =&gt; JsObject(Map[String, JsValue]())
+</span><span class='line'>      // Get the type of map keys from the first key, translate the rest the same way
+</span><span class='line'>      case m: Map[_, _] =&gt; m.keys.head match {
+</span><span class='line'>        case sym: Symbol =&gt;
+</span><span class='line'>          val map = m.asInstanceOf[Map[Symbol, _]]
+</span><span class='line'>          val pairs = map.map { case (sym, v) =&gt; (sym.name -&gt; write(v)) }
+</span><span class='line'>          JsObject(pairs)
+</span><span class='line'>        case s: String =&gt; mapFormat[String, Any].write(m.asInstanceOf[Map[String, Any]])
+</span><span class='line'>        case a: Any =&gt;
+</span><span class='line'>          val map = m.asInstanceOf[Map[Any, _]]
+</span><span class='line'>          val pairs = map.map { case (sym, v) =&gt; (sym.toString -&gt; write(v)) }
+</span><span class='line'>          JsObject(pairs)
+</span><span class='line'>      }
+</span><span class='line'>      case a: Array[_] =&gt; seqFormat[Any].write(a.toSeq)
+</span><span class='line'>      case true        =&gt; JsTrue
+</span><span class='line'>      case false       =&gt; JsFalse
+</span><span class='line'>      case p: Product  =&gt; seqFormat[Any].write(p.productIterator.toSeq)
+</span><span class='line'>      case null        =&gt; JsNull
+</span><span class='line'>      case x           =&gt; JsString(x.toString)
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    def read(value: JsValue) = value match {
+</span><span class='line'>      case JsNumber(n) =&gt; n.intValue()
+</span><span class='line'>      case JsString(s) =&gt; s
+</span><span class='line'>      case JsTrue      =&gt; true
+</span><span class='line'>      case JsFalse     =&gt; false
+</span><span class='line'>    }
+</span><span class='line'>  }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>We add the code above the routes into HttpService Trait
+4. Add a route
+Our only action will accept list of keywords and respond with enchanced data from targetingIdeaService</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>post {
+</span><span class='line'>    requestInstance { req =&gt;
+</span><span class='line'>      val request = req.entity.asString.parseJson.convertTo[KeywordsRequest]
+</span><span class='line'>      complete {
+</span><span class='line'>        AdwordsCaller.handler(request.keywords, request.location_id, request.language_id).mapTo[Map[String, Map[String, Any]]]
+</span><span class='line'>      }
+</span><span class='line'>    }
+</span><span class='line'>  }</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Implement an action
+Adwords Caller implements Akka actor system that throttles requests to google limited to specific timeframe</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>case class CallAdwords(keywords: Array[String], location_id: Integer, langauge_id: Integer, session: AdWordsSession, AdWordsServices: AdWordsServices)
+</span><span class='line'>case object CallAdwords
+</span><span class='line'>
+</span><span class='line'>class AdwordsCaller extends Actor {
+</span><span class='line'>  def receive = {
+</span><span class='line'>    case CallAdwords(keywords, location_id, language_id, session, adWordsServices) =&gt; sender ! GetAdwordsStats.run(keywords, location_id, language_id, session, adWordsServices)
+</span><span class='line'>  }
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>object AdwordsCaller {
+</span><span class='line'>
+</span><span class='line'>  val system = ActorSystem()
+</span><span class='line'>  import system.dispatcher
+</span><span class='line'>  implicit val timeout = Timeout(60.second)
+</span><span class='line'>
+</span><span class='line'>  val adwordsCaller = system.actorOf(Props[AdwordsCaller])
+</span><span class='line'>  val throttler = system.actorOf(Props(classOf[TimerBasedThrottler], 200 msgsPer 60.seconds))
+</span><span class='line'>  throttler ! SetTarget(Some(adwordsCaller))
+</span><span class='line'>
+</span><span class='line'>  def handler(keywords: Array[String], location_id: Integer, language_id: Integer): Future[Any] = {
+</span><span class='line'>    val result = (throttler ? CallAdwords(keywords, location_id, language_id, null, null))
+</span><span class='line'>    return result
+</span><span class='line'>  }
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>Call AdWords Api
+Finally GetAdwordsStats calls GoogleAdwords Api IdeaQuery and TrafficEstimation Query and combines results for each keyword</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'> def run(keywords: Array[String], location_id: Integer, language_id: Integer, session: AdWordsSession, adWordsServices: AdWordsServices): Map[String, Map[String, Any]] = {
+</span><span class='line'>      val oAuth2Credential = new OfflineCredentials.Builder().forApi(Api.ADWORDS)
+</span><span class='line'>    .fromFile("./ads.properties")
+</span><span class='line'>    .build()
+</span><span class='line'>    .generateCredential()
+</span><span class='line'>  val logger = LoggerFactory.getLogger(classOf[AdWordsServices])
+</span><span class='line'>  val session = new AdWordsSession.Builder().fromFile().withOAuth2Credential(oAuth2Credential)
+</span><span class='line'>    .build()
+</span><span class='line'>  val adWordsServices = new AdWordsServices()
+</span><span class='line'>    
+</span><span class='line'>    val ideaResults = runTargetingIdeaQuery(adWordsServices, session, keywords, location_id, language_id)
+</span><span class='line'>    val traficEstimatorResults = runTrafficEstimatorQuery(adWordsServices, session, keywords, location_id, language_id)
+</span><span class='line'>    var resultKeywords = Map[String, Map[String, Any]]()
+</span><span class='line'>    for (keyword &lt;- keywords) {
+</span><span class='line'>      resultKeywords = resultKeywords + (keyword.toLowerCase() -&gt; Map())
+</span><span class='line'>      for ((ideaKey, ideaValue) &lt;- ideaResults(keyword.toLowerCase())) {
+</span><span class='line'>        var newVal = resultKeywords(keyword.toLowerCase()) + (ideaKey -&gt; ideaValue)
+</span><span class='line'>        resultKeywords = resultKeywords + (keyword.toLowerCase() -&gt; newVal)
+</span><span class='line'>      }
+</span><span class='line'>      for ((ideaKey, ideaValue) &lt;- traficEstimatorResults(keyword)) {
+</span><span class='line'>        var newVal = resultKeywords(keyword.toLowerCase()) + (ideaKey -&gt; ideaValue)
+</span><span class='line'>        resultKeywords = resultKeywords + (keyword.toLowerCase() -&gt; newVal)
+</span><span class='line'>      }
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    return resultKeywords
+</span><span class='line'>  }
+</span><span class='line'>
+</span><span class='line'>  def runTargetingIdeaQuery(adWordsServices: AdWordsServices, session: AdWordsSession, keywords: Array[String], location_id: Integer, language_id: Integer): Map[String, Map[String, Any]] = {
+</span><span class='line'>
+</span><span class='line'>    val targetingIdeaService = adWordsServices.get(session, classOf[TargetingIdeaServiceInterface])
+</span><span class='line'>    val selector = new TargetingIdeaSelector()
+</span><span class='line'>    selector.setRequestType(RequestType.STATS)
+</span><span class='line'>    selector.setIdeaType(IdeaType.KEYWORD)
+</span><span class='line'>
+</span><span class='line'>    selector.setRequestedAttributeTypes(Array(AttributeType.KEYWORD_TEXT, AttributeType.SEARCH_VOLUME,
+</span><span class='line'>      AttributeType.CATEGORY_PRODUCTS_AND_SERVICES, AttributeType.AVERAGE_CPC, AttributeType.COMPETITION))
+</span><span class='line'>    val paging = new Paging()
+</span><span class='line'>    paging.setStartIndex(0)
+</span><span class='line'>    paging.setNumberResults(2500)
+</span><span class='line'>    selector.setPaging(paging)
+</span><span class='line'>    val relatedToQuerySearchParameter = new RelatedToQuerySearchParameter()
+</span><span class='line'>    relatedToQuerySearchParameter.setQueries(keywords)
+</span><span class='line'>
+</span><span class='line'>    val languageParameter = new LanguageSearchParameter()
+</span><span class='line'>    val language = new Language()
+</span><span class='line'>    language.setId(language_id.toLong)
+</span><span class='line'>    languageParameter.setLanguages(Array(language))
+</span><span class='line'>    val locationParameter = new LocationSearchParameter()
+</span><span class='line'>    val location = new Location()
+</span><span class='line'>    location.setId(location_id.toLong)
+</span><span class='line'>    locationParameter.setLocations(Array(location))
+</span><span class='line'>
+</span><span class='line'>    selector.setSearchParameters(Array(relatedToQuerySearchParameter, languageParameter, locationParameter))
+</span><span class='line'>    val page = targetingIdeaService.get(selector)
+</span><span class='line'>    var resultKeywords = Map[String, Map[String, Any]]()
+</span><span class='line'>    if (page.getEntries != null && page.getEntries.length &gt; 0) {
+</span><span class='line'>
+</span><span class='line'>      for (targetingIdea &lt;- page.getEntries) {
+</span><span class='line'>        val data = Maps.toMap(targetingIdea.getData)
+</span><span class='line'>        val keyword = data.get(AttributeType.KEYWORD_TEXT).asInstanceOf[StringAttribute]
+</span><span class='line'>        val categories = data.get(AttributeType.CATEGORY_PRODUCTS_AND_SERVICES).asInstanceOf[IntegerSetAttribute]
+</span><span class='line'>        var categoriesString = "(none)"
+</span><span class='line'>        if (categories != null && categories.getValue != null) {
+</span><span class='line'>          categoriesString = categories.getValue.toJson.prettyPrint
+</span><span class='line'>        }
+</span><span class='line'>        val averageMonthlySearches = data.get(AttributeType.SEARCH_VOLUME).asInstanceOf[LongAttribute]
+</span><span class='line'>          .getValue
+</span><span class='line'>        val cpc = data.get(AttributeType.AVERAGE_CPC).asInstanceOf[MoneyAttribute]
+</span><span class='line'>
+</span><span class='line'>        val money = cpc.getValue
+</span><span class='line'>        var averageCpc = 0.0
+</span><span class='line'>        if (money != null) {
+</span><span class='line'>          averageCpc = money.getMicroAmount.toDouble / 1000000.0
+</span><span class='line'>        }
+</span><span class='line'>        var result: Map[String, Any] = Map("search_volume" -&gt; averageMonthlySearches.toString(), "categories" -&gt; categoriesString, "average_cpc" -&gt; averageCpc.toString())
+</span><span class='line'>        resultKeywords = resultKeywords + (keyword.getValue() -&gt; result)
+</span><span class='line'>      }
+</span><span class='line'>    } else {
+</span><span class='line'>      println("No related keywords were found.")
+</span><span class='line'>    }
+</span><span class='line'>    return resultKeywords
+</span><span class='line'>  }
+</span><span class='line'>  def runTrafficEstimatorQuery(adWordsServices: AdWordsServices, session: AdWordsSession, keywords: Array[String], location_id: Integer, language_id: Integer): Map[String, Map[String, Any]] = {
+</span><span class='line'>
+</span><span class='line'>    val keywordEstimateRequests = new ArrayList[KeywordEstimateRequest]()
+</span><span class='line'>
+</span><span class='line'>    for (keywordText &lt;- keywords) {
+</span><span class='line'>      val keyword = new Keyword();
+</span><span class='line'>      keyword.setText(keywordText);
+</span><span class='line'>      keyword.setMatchType(KeywordMatchType.BROAD);
+</span><span class='line'>      val keywordEstimateRequest = new KeywordEstimateRequest();
+</span><span class='line'>      keywordEstimateRequest.setKeyword(keyword);
+</span><span class='line'>      keywordEstimateRequests.add(keywordEstimateRequest);
+</span><span class='line'>    }
+</span><span class='line'>    val adGroupEstimateRequests = new ArrayList[AdGroupEstimateRequest]()
+</span><span class='line'>    val adGroupEstimateRequest = new AdGroupEstimateRequest()
+</span><span class='line'>    adGroupEstimateRequest.setKeywordEstimateRequests(keywordEstimateRequests.toArray(Array()))
+</span><span class='line'>    adGroupEstimateRequest.setMaxCpc(new Money(null, 600000L))
+</span><span class='line'>    adGroupEstimateRequests.add(adGroupEstimateRequest)
+</span><span class='line'>
+</span><span class='line'>    var campaignEstimateRequests = Array[CampaignEstimateRequest]()
+</span><span class='line'>    val campaignEstimateRequest = new CampaignEstimateRequest()
+</span><span class='line'>    campaignEstimateRequest.setAdGroupEstimateRequests(adGroupEstimateRequests.toArray(Array()))
+</span><span class='line'>
+</span><span class='line'>    val location = new Location()
+</span><span class='line'>    location.setId(location_id.toLong)
+</span><span class='line'>    val language = new Language()
+</span><span class='line'>    language.setId(language_id.toLong)
+</span><span class='line'>    campaignEstimateRequests = campaignEstimateRequests :+ campaignEstimateRequest
+</span><span class='line'>    val selector = new TrafficEstimatorSelector()
+</span><span class='line'>    selector.setCampaignEstimateRequests(campaignEstimateRequests)
+</span><span class='line'>
+</span><span class='line'>    val trafficEstimatorService = adWordsServices.get(session, classOf[TrafficEstimatorServiceInterface])
+</span><span class='line'>    val result = trafficEstimatorService.get(selector)
+</span><span class='line'>
+</span><span class='line'>    var resultKeywords = Map[String, Map[String, Any]]()
+</span><span class='line'>    var index = 0
+</span><span class='line'>    for (
+</span><span class='line'>      campaignEstimate &lt;- result.getCampaignEstimates; adGroupEstimate &lt;- campaignEstimate.getAdGroupEstimates;
+</span><span class='line'>      keywordWithEstimate &lt;- adGroupEstimate.getKeywordEstimates.zip(keywords)
+</span><span class='line'>    ) {
+</span><span class='line'>      var keyword = keywordWithEstimate._2
+</span><span class='line'>      var keywordEstimate = keywordWithEstimate._1
+</span><span class='line'>      val min = keywordEstimate.getMin
+</span><span class='line'>      val max = keywordEstimate.getMax
+</span><span class='line'>      val avg_total_cost = (max.getTotalCost.getMicroAmount + min.getTotalCost.getMicroAmount) / 2000000.0
+</span><span class='line'>      var result: Map[String, Any] = Map("avg_ctr" -&gt; (min.getClickThroughRate + max.getClickThroughRate) / 2,
+</span><span class='line'>        "keyword" -&gt; keyword, "avg_total_cost" -&gt; avg_total_cost.toString(),
+</span><span class='line'>        "clicks_per_day" -&gt; Array(min.getClicksPerDay, max.getClicksPerDay),
+</span><span class='line'>        "total_cost" -&gt; Array(min.getTotalCost.getMicroAmount / 1000000, max.getTotalCost.getMicroAmount / 1000000),
+</span><span class='line'>        "average_position" -&gt; Array(min.getAveragePosition, max.getAveragePosition))
+</span><span class='line'>      resultKeywords = resultKeywords + (keyword -&gt; result)
+</span><span class='line'>    }
+</span><span class='line'>    return resultKeywords
+</span><span class='line'>  }</span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Jakub Nieznalski</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-05-02T17:45:22+00:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>5:45 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/adwords/'>adwords</a>, <a class='category' href='/blog/categories/api/'>api</a>, <a class='category' href='/blog/categories/scala/'>scala</a>, <a class='category' href='/blog/categories/spray/'>spray</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/" data-via="" data-counturl="http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/02/22/logging-with-docker/" title="Previous Post: Logging with Docker">&laquo; Logging with Docker</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/">Consuming Google AdWords Api With Akka Spray</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/22/logging-with-docker/">Logging With Docker</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/">Raspberry PI as a Home Hotspot Powered by Telekom Hotspot</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/05/aws-lambda-the-bad-parts/">AWS Lambda. The Bad Parts</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/knusul">@knusul</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'knusul',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - Jakub Nieznalski -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'tddornottobe';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/';
+        var disqus_url = 'http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

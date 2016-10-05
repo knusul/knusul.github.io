@@ -1,0 +1,348 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Logging With Docker - TDD or not to Be</title>
+  <meta name="author" content="Jakub Nieznalski">
+
+  
+  <meta name="description" content="There is great article how to configure centralized logging for docker with cloudwatch: 1
+https://blogs.aws.amazon.com/application-management/post/ &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://knusul.github.io/blog/2016/02/22/logging-with-docker/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="TDD or not to Be" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-44042083-3']);
+    _gaq.push(['_trackPageview']);
+    _gaq.push(['_setDomainName','github.io']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+
+  </script>
+
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">TDD or not to Be</a></h1>
+  
+    <h2>Developers journey to clean code.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="knusul.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Logging With Docker</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-22T15:59:05+00:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>3:59 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://knusul.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>There is great article how to configure centralized logging for docker with cloudwatch:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>https://blogs.aws.amazon.com/application-management/post/TxFRDMTMILAA8X/Send-ECS-Container-Logs-to-CloudWatch-Logs-for-Centralized-Monitoring</span></code></pre></td></tr></table></div></figure>
+
+
+<p>It assumes that the application can send logs to other container running rsyslog.
+We will extend the example to work with locally saved logs.
+In order to make it work we need to:</p>
+
+<p>1) Create one container that will configure cloudwatch and rsyslog that listen to the events.</p>
+
+<p>2) Configure rsyslog on second devise that will listen to file changes in logs folder and will send logs to second rsyslog service running on another machine</p>
+
+<p>I decided to create another rsyslog agent running together with my application because I&rsquo;m reusing the docker cloudwatch container.</p>
+
+<p>First lets remove /dev/xconsole from rsyslog config. It breaks the rsyslog because most docker images does not have dev/xconsole.
+Open aws cloudwatch ecs project and edit Dockerfile</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>RUN rm /etc/rsyslog.d/50-default.conf</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Next we need to configure rsyslog on our app machine. We need rsyslog version > 8.15.0 to use wildcard imfile as a log source(see rsyslog.conf):</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>RUN apt-get update
+</span><span class='line'>RUN apt-get -y install libestr-dev  liblogging-stdlog-dev  libgcrypt-dev uuid-dev libjson0-dev  libz-dev
+</span><span class='line'>RUN wget http://www.rsyslog.com/files/download/rsyslog/rsyslog-8.16.0.tar.gz
+</span><span class='line'>RUN tar xvzf rsyslog-8.16.0.tar.gz
+</span><span class='line'>RUN cd rsyslog-8.16.0 && ./configure --enable-imfile && make && make install
+</span><span class='line'>COPY rsyslog.conf /etc/rsyslog.conf
+</span><span class='line'>RUN pip install supervisor
+</span><span class='line'>COPY supervisord.conf /usr/local/etc/supervisord.conf
+</span><span class='line'>CMD ["/usr/local/bin/supervisord"]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>supervisord.conf is pretty simply:</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[supervisord]
+</span><span class='line'>nodaemon=true
+</span><span class='line'>
+</span><span class='line'>[program:rsyslogd]
+</span><span class='line'>command=/usr/local/sbin/rsyslogd -n
+</span><span class='line'>
+</span><span class='line'>[program:awslogs]
+</span><span class='line'>command=your-app-with-logs
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>rsyslog.conf sends logs written to file to rsyslog on machine running cloudwatch agent</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>module(load="imfile")
+</span><span class='line'>input(type="imfile" file="/usr/src/app/logs/location/*.log" tag="spider_locations" facility="local6")</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Jakub Nieznalski</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-02-22T15:59:05+00:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>3:59 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/docker/'>docker</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://knusul.github.io/blog/2016/02/22/logging-with-docker/" data-via="" data-counturl="http://knusul.github.io/blog/2016/02/22/logging-with-docker/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/" title="Previous Post: Modifing AWS Gateway output parameters">&laquo; Modifing AWS Gateway output parameters</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/" title="Next Post: Consuming Google AdWords Api with Akka Spray">Consuming Google AdWords Api with Akka Spray &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/">Consuming Google AdWords Api With Akka Spray</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/22/logging-with-docker/">Logging With Docker</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/">Raspberry PI as a Home Hotspot Powered by Telekom Hotspot</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/05/aws-lambda-the-bad-parts/">AWS Lambda. The Bad Parts</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/knusul">@knusul</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'knusul',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - Jakub Nieznalski -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'tddornottobe';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://knusul.github.io/blog/2016/02/22/logging-with-docker/';
+        var disqus_url = 'http://knusul.github.io/blog/2016/02/22/logging-with-docker/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
