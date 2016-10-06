@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Adwords | TDD or not to Be]]></title>
+  <link href="http://knusul.github.io/blog/categories/adwords/atom.xml" rel="self"/>
+  <link href="http://knusul.github.io/"/>
+  <updated>2016-10-06T20:16:35+02:00</updated>
+  <id>http://knusul.github.io/</id>
+  <author>
+    <name><![CDATA[Jakub Nieznalski]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Consuming Google AdWords Api With Akka Spray]]></title>
+    <link href="http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/"/>
+    <updated>2016-05-02T19:45:22+02:00</updated>
+    <id>http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray</id>
+    <content type="html"><![CDATA[<p>Google AdWords Api is a very tricky beast when under heavy use.
+When you send too many requests per minute you get banned for 30s. Moreover the amount of queries that you cam perform varies durning the day.
+I found consuming Google AdWords Api a perfect use case for Scala Akka and Spray frameworks.
+Please take into account I&rsquo;m beginer Scala programmer and it&rsquo;s one of my very first projects in that language.
+We will build Spray Api that will accept json list of keywords, adWords locationId and languageId and we return the keywords enchanced with targetingIdea and trafficEstiamtor service data.
+We use throttle actor(<a href="http://doc.akka.io/docs/akka/snapshot/contrib/throttle.html">http://doc.akka.io/docs/akka/snapshot/contrib/throttle.html</a>) to limit amount of queries to adWords Api.</p>
+
+<ol>
+<li><p>Start new Spray project like described at: <code>https://github.com/spray/spray-template/tree/on_spray-can_1.3</code>
+<code>
+git clone git://github.com/spray/spray-template.git adwords-project
+</code></p></li>
+<li><p>Add the following libraries to build.sbt</p></li>
+</ol>
+
+
+<pre><code>     "com.typesafe.akka" %% "akka-contrib" % akkaV,
+     "io.spray" %%  "spray-json" % "1.3.2",
+     "com.google.api-ads" % "ads-lib" % "2.11.0" exclude("commons-beanutils", "commons-beanutils"),
+     "com.google.api-ads" % "adwords-axis" % "2.11.0" exclude("commons-beanutils", "commons-beanutils"),
+     "commons-beanutils" % "commons-beanutils" % "1.9.2",
+     "com.google.http-client" % "google-http-client-gson" % "1.21.0",
+     "com.google.inject" % "guice" % "4.0",
+     "org.slf4j" % "slf4j-simple" % "1.7.5",
+     "javax.activation"  % "activation"  % "1.1.1"
+</code></pre>
+
+<ol>
+<li><p>Write JSON converter
+We want to return json, and we need to convert adWords api response to json
+In order to do that we write json converter:
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>implicit object AnyJsonFormat extends JsonFormat[Any] {
+</span><span class='line'> def write(x: Any): JsValue = x match {
+</span><span class='line'>   case n: Int =&gt; JsNumber(n)
+</span><span class='line'>   case l: Long =&gt; JsNumber(l)
+</span><span class='line'>   case d: Double =&gt; JsNumber(d)
+</span><span class='line'>   case f: Float =&gt; JsNumber(f.toDouble)
+</span><span class='line'>   case s: String =&gt; JsString(s)
+</span><span class='line'>   case x: Seq[&lt;em&gt;] =&gt; seqFormat[Any].write(x)
+</span><span class='line'>   case m: Map[&lt;/em&gt;, &lt;em&gt;] if m.isEmpty =&gt; JsObject(Map&lt;a href=""&gt;String, JsValue&lt;/a&gt;)
+</span><span class='line'>   // Get the type of map keys from the first key, translate the rest the same way
+</span><span class='line'>   case m: Map[&lt;/em&gt;, &lt;em&gt;] =&gt; m.keys.head match {
+</span><span class='line'>     case sym: Symbol =&gt;
+</span><span class='line'>       val map = m.asInstanceOf[Map[Symbol, &lt;/em&gt;]]
+</span><span class='line'>       val pairs = map.map { case (sym, v) =&gt; (sym.name -&gt; write(v)) }
+</span><span class='line'>       JsObject(pairs)
+</span><span class='line'>     case s: String =&gt; mapFormat[String, Any].write(m.asInstanceOf[Map[String, Any]])
+</span><span class='line'>     case a: Any =&gt;
+</span><span class='line'>       val map = m.asInstanceOf[Map[Any, &lt;em&gt;]]
+</span><span class='line'>       val pairs = map.map { case (sym, v) =&gt; (sym.toString -&gt; write(v)) }
+</span><span class='line'>       JsObject(pairs)
+</span><span class='line'>   }
+</span><span class='line'>   case a: Array[&lt;/em&gt;] =&gt; seqFormat[Any].write(a.toSeq)
+</span><span class='line'>   case true        =&gt; JsTrue
+</span><span class='line'>   case false       =&gt; JsFalse
+</span><span class='line'>   case p: Product  =&gt; seqFormat[Any].write(p.productIterator.toSeq)
+</span><span class='line'>   case null        =&gt; JsNull
+</span><span class='line'>   case x           =&gt; JsString(x.toString)
+</span><span class='line'> }&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt; def read(value: JsValue) = value match {
+</span><span class='line'>   case JsNumber(n) =&gt; n.intValue()
+</span><span class='line'>   case JsString(s) =&gt; s
+</span><span class='line'>   case JsTrue      =&gt; true
+</span><span class='line'>   case JsFalse     =&gt; false
+</span><span class='line'> }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+We add the code above the routes into HttpService Trait</p></li>
+<li>Add a route
+Our only action will accept list of keywords and respond with enchanced data from targetingIdeaService
+<code>
+post {
+ requestInstance { req =&gt;
+   val request = req.entity.asString.parseJson.convertTo[KeywordsRequest]
+   complete {
+     AdwordsCaller.handler(request.keywords, request.location_id, request.language_id).mapTo[Map[String, Map[String, Any]]]
+   }
+ }
+}
+</code></li>
+<li>Implement an action
+Adwords Caller implements Akka actor system that throttles requests to google limited to specific timeframe
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>case class CallAdwords(keywords: Array[String], location_id: Integer, langauge_id: Integer, session: AdWordsSession, AdWordsServices: AdWordsServices)
+</span><span class='line'>case object CallAdwords&lt;/li&gt;
+</span><span class='line'>&lt;/ol&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;class AdwordsCaller extends Actor {
+</span><span class='line'>  def receive = {
+</span><span class='line'>    case CallAdwords(keywords, location_id, language_id, session, adWordsServices) =&gt; sender ! GetAdwordsStats.run(keywords, location_id, language_id, session, adWordsServices)
+</span><span class='line'>  }
+</span><span class='line'>}&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;object AdwordsCaller {&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  val system = ActorSystem()
+</span><span class='line'>  import system.dispatcher
+</span><span class='line'>  implicit val timeout = Timeout(60.second)&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  val adwordsCaller = system.actorOf(Props[AdwordsCaller])
+</span><span class='line'>  val throttler = system.actorOf(Props(classOf[TimerBasedThrottler], 200 msgsPer 60.seconds))
+</span><span class='line'>  throttler ! SetTarget(Some(adwordsCaller))&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  def handler(keywords: Array[String], location_id: Integer, language_id: Integer): Future[Any] = {
+</span><span class='line'>    val result = (throttler ? CallAdwords(keywords, location_id, language_id, null, null))
+</span><span class='line'>    return result
+</span><span class='line'>  }
+</span><span class='line'>}&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;
+</span><span class='line'>6. Call AdWords Api
+</span><span class='line'>Finally GetAdwordsStats calls GoogleAdwords Api IdeaQuery and TrafficEstimation Query and combines results for each keyword
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt; def run(keywords: Array[String], location_id: Integer, language_id: Integer, session: AdWordsSession, adWordsServices: AdWordsServices): Map[String, Map[String, Any]] = {
+</span><span class='line'>      val oAuth2Credential = new OfflineCredentials.Builder().forApi(Api.ADWORDS)
+</span><span class='line'>    .fromFile(&ldquo;./ads.properties&rdquo;)
+</span><span class='line'>    .build()
+</span><span class='line'>    .generateCredential()
+</span><span class='line'>  val logger = LoggerFactory.getLogger(classOf[AdWordsServices])
+</span><span class='line'>  val session = new AdWordsSession.Builder().fromFile().withOAuth2Credential(oAuth2Credential)
+</span><span class='line'>    .build()
+</span><span class='line'>  val adWordsServices = new AdWordsServices()&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;val ideaResults = runTargetingIdeaQuery(adWordsServices, session, keywords, location_id, language_id)
+</span><span class='line'>val traficEstimatorResults = runTrafficEstimatorQuery(adWordsServices, session, keywords, location_id, language_id)
+</span><span class='line'>var resultKeywords = Map[String, Map[String, Any]]()
+</span><span class='line'>for (keyword &lt;- keywords) {
+</span><span class='line'>  resultKeywords = resultKeywords + (keyword.toLowerCase() -&gt; Map())
+</span><span class='line'>  for ((ideaKey, ideaValue) &lt;- ideaResults(keyword.toLowerCase())) {
+</span><span class='line'>    var newVal = resultKeywords(keyword.toLowerCase()) + (ideaKey -&gt; ideaValue)
+</span><span class='line'>    resultKeywords = resultKeywords + (keyword.toLowerCase() -&gt; newVal)
+</span><span class='line'>  }
+</span><span class='line'>  for ((ideaKey, ideaValue) &lt;- traficEstimatorResults(keyword)) {
+</span><span class='line'>    var newVal = resultKeywords(keyword.toLowerCase()) + (ideaKey -&gt; ideaValue)
+</span><span class='line'>    resultKeywords = resultKeywords + (keyword.toLowerCase() -&gt; newVal)
+</span><span class='line'>  }
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>return resultKeywords
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  }&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  def runTargetingIdeaQuery(adWordsServices: AdWordsServices, session: AdWordsSession, keywords: Array[String], location_id: Integer, language_id: Integer): Map[String, Map[String, Any]] = {&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;val targetingIdeaService = adWordsServices.get(session, classOf[TargetingIdeaServiceInterface])
+</span><span class='line'>val selector = new TargetingIdeaSelector()
+</span><span class='line'>selector.setRequestType(RequestType.STATS)
+</span><span class='line'>selector.setIdeaType(IdeaType.KEYWORD)
+</span><span class='line'>
+</span><span class='line'>selector.setRequestedAttributeTypes(Array(AttributeType.KEYWORD_TEXT, AttributeType.SEARCH_VOLUME,
+</span><span class='line'>  AttributeType.CATEGORY_PRODUCTS_AND_SERVICES, AttributeType.AVERAGE_CPC, AttributeType.COMPETITION))
+</span><span class='line'>val paging = new Paging()
+</span><span class='line'>paging.setStartIndex(0)
+</span><span class='line'>paging.setNumberResults(2500)
+</span><span class='line'>selector.setPaging(paging)
+</span><span class='line'>val relatedToQuerySearchParameter = new RelatedToQuerySearchParameter()
+</span><span class='line'>relatedToQuerySearchParameter.setQueries(keywords)
+</span><span class='line'>
+</span><span class='line'>val languageParameter = new LanguageSearchParameter()
+</span><span class='line'>val language = new Language()
+</span><span class='line'>language.setId(language_id.toLong)
+</span><span class='line'>languageParameter.setLanguages(Array(language))
+</span><span class='line'>val locationParameter = new LocationSearchParameter()
+</span><span class='line'>val location = new Location()
+</span><span class='line'>location.setId(location_id.toLong)
+</span><span class='line'>locationParameter.setLocations(Array(location))
+</span><span class='line'>
+</span><span class='line'>selector.setSearchParameters(Array(relatedToQuerySearchParameter, languageParameter, locationParameter))
+</span><span class='line'>val page = targetingIdeaService.get(selector)
+</span><span class='line'>var resultKeywords = Map[String, Map[String, Any]]()
+</span><span class='line'>if (page.getEntries != null &amp;&amp; page.getEntries.length &gt; 0) {
+</span><span class='line'>
+</span><span class='line'>  for (targetingIdea &lt;- page.getEntries) {
+</span><span class='line'>    val data = Maps.toMap(targetingIdea.getData)
+</span><span class='line'>    val keyword = data.get(AttributeType.KEYWORD_TEXT).asInstanceOf[StringAttribute]
+</span><span class='line'>    val categories = data.get(AttributeType.CATEGORY_PRODUCTS_AND_SERVICES).asInstanceOf[IntegerSetAttribute]
+</span><span class='line'>    var categoriesString = "(none)"
+</span><span class='line'>    if (categories != null &amp;&amp; categories.getValue != null) {
+</span><span class='line'>      categoriesString = categories.getValue.toJson.prettyPrint
+</span><span class='line'>    }
+</span><span class='line'>    val averageMonthlySearches = data.get(AttributeType.SEARCH_VOLUME).asInstanceOf[LongAttribute]
+</span><span class='line'>      .getValue
+</span><span class='line'>    val cpc = data.get(AttributeType.AVERAGE_CPC).asInstanceOf[MoneyAttribute]
+</span><span class='line'>
+</span><span class='line'>    val money = cpc.getValue
+</span><span class='line'>    var averageCpc = 0.0
+</span><span class='line'>    if (money != null) {
+</span><span class='line'>      averageCpc = money.getMicroAmount.toDouble / 1000000.0
+</span><span class='line'>    }
+</span><span class='line'>    var result: Map[String, Any] = Map("search_volume" -&gt; averageMonthlySearches.toString(), "categories" -&gt; categoriesString, "average_cpc" -&gt; averageCpc.toString())
+</span><span class='line'>    resultKeywords = resultKeywords + (keyword.getValue() -&gt; result)
+</span><span class='line'>  }
+</span><span class='line'>} else {
+</span><span class='line'>  println("No related keywords were found.")
+</span><span class='line'>}
+</span><span class='line'>return resultKeywords
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  }
+</span><span class='line'>  def runTrafficEstimatorQuery(adWordsServices: AdWordsServices, session: AdWordsSession, keywords: Array[String], location_id: Integer, language_id: Integer): Map[String, Map[String, Any]] = {&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;val keywordEstimateRequests = new ArrayList[KeywordEstimateRequest]()
+</span><span class='line'>
+</span><span class='line'>for (keywordText &lt;- keywords) {
+</span><span class='line'>  val keyword = new Keyword();
+</span><span class='line'>  keyword.setText(keywordText);
+</span><span class='line'>  keyword.setMatchType(KeywordMatchType.BROAD);
+</span><span class='line'>  val keywordEstimateRequest = new KeywordEstimateRequest();
+</span><span class='line'>  keywordEstimateRequest.setKeyword(keyword);
+</span><span class='line'>  keywordEstimateRequests.add(keywordEstimateRequest);
+</span><span class='line'>}
+</span><span class='line'>val adGroupEstimateRequests = new ArrayList[AdGroupEstimateRequest]()
+</span><span class='line'>val adGroupEstimateRequest = new AdGroupEstimateRequest()
+</span><span class='line'>adGroupEstimateRequest.setKeywordEstimateRequests(keywordEstimateRequests.toArray(Array()))
+</span><span class='line'>adGroupEstimateRequest.setMaxCpc(new Money(null, 600000L))
+</span><span class='line'>adGroupEstimateRequests.add(adGroupEstimateRequest)
+</span><span class='line'>
+</span><span class='line'>var campaignEstimateRequests = Array[CampaignEstimateRequest]()
+</span><span class='line'>val campaignEstimateRequest = new CampaignEstimateRequest()
+</span><span class='line'>campaignEstimateRequest.setAdGroupEstimateRequests(adGroupEstimateRequests.toArray(Array()))
+</span><span class='line'>
+</span><span class='line'>val location = new Location()
+</span><span class='line'>location.setId(location_id.toLong)
+</span><span class='line'>val language = new Language()
+</span><span class='line'>language.setId(language_id.toLong)
+</span><span class='line'>campaignEstimateRequests = campaignEstimateRequests :+ campaignEstimateRequest
+</span><span class='line'>val selector = new TrafficEstimatorSelector()
+</span><span class='line'>selector.setCampaignEstimateRequests(campaignEstimateRequests)
+</span><span class='line'>
+</span><span class='line'>val trafficEstimatorService = adWordsServices.get(session, classOf[TrafficEstimatorServiceInterface])
+</span><span class='line'>val result = trafficEstimatorService.get(selector)
+</span><span class='line'>
+</span><span class='line'>var resultKeywords = Map[String, Map[String, Any]]()
+</span><span class='line'>var index = 0
+</span><span class='line'>for (
+</span><span class='line'>  campaignEstimate &lt;- result.getCampaignEstimates; adGroupEstimate &lt;- campaignEstimate.getAdGroupEstimates;
+</span><span class='line'>  keywordWithEstimate &lt;- adGroupEstimate.getKeywordEstimates.zip(keywords)
+</span><span class='line'>) {
+</span><span class='line'>  var keyword = keywordWithEstimate._2
+</span><span class='line'>  var keywordEstimate = keywordWithEstimate._1
+</span><span class='line'>  val min = keywordEstimate.getMin
+</span><span class='line'>  val max = keywordEstimate.getMax
+</span><span class='line'>  val avg_total_cost = (max.getTotalCost.getMicroAmount + min.getTotalCost.getMicroAmount) / 2000000.0
+</span><span class='line'>  var result: Map[String, Any] = Map("avg_ctr" -&gt; (min.getClickThroughRate + max.getClickThroughRate) / 2,
+</span><span class='line'>    "keyword" -&gt; keyword, "avg_total_cost" -&gt; avg_total_cost.toString(),
+</span><span class='line'>    "clicks_per_day" -&gt; Array(min.getClicksPerDay, max.getClicksPerDay),
+</span><span class='line'>    "total_cost" -&gt; Array(min.getTotalCost.getMicroAmount / 1000000, max.getTotalCost.getMicroAmount / 1000000),
+</span><span class='line'>    "average_position" -&gt; Array(min.getAveragePosition, max.getAveragePosition))
+</span><span class='line'>  resultKeywords = resultKeywords + (keyword -&gt; result)
+</span><span class='line'>}
+</span><span class='line'>return resultKeywords
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;  }</span></code></pre></td></tr></table></div></figure></p>
+]]></content>
+  </entry>
+  
+</feed>

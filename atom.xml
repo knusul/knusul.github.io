@@ -1,112 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <title>TDD or not to Be</title>
-  <meta name="author" content="Jakub Nieznalski">
-
-  
-  <meta name="description" content="Sometimes I need to interact with github using multiple ssh-keys.
-This is how I configure git to do it: Lets create new rsa key 1
-ssh-keygen Then &hellip;">
-  
-
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  
-  <link rel="canonical" href="http://knusul.github.io/">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="TDD or not to Be" type="application/atom+xml">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
-  
-  <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-44042083-3']);
-    _gaq.push(['_trackPageview']);
-    _gaq.push(['_setDomainName','github.io']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-
-  </script>
-
-
-</head>
-
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/">TDD or not to Be</a></h1>
-  
-    <h2>Developers journey to clean code.</h2>
-  
-</hgroup>
-
-</header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="https://www.google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="sitesearch" value="knusul.github.io">
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
-
-</nav>
-  <div id="main">
-    <div id="content">
-      <div class="blog-index">
-  
-  
-  
-    <article>
-      
-  <header>
+  <title><![CDATA[TDD or not to Be]]></title>
+  <link href="http://knusul.github.io/atom.xml" rel="self"/>
+  <link href="http://knusul.github.io/"/>
+  <updated>2016-10-06T20:16:35+02:00</updated>
+  <id>http://knusul.github.io/</id>
+  <author>
+    <name><![CDATA[Jakub Nieznalski]]></name>
     
-      <h1 class="entry-title"><a href="/blog/2016/10/05/using-multiple-ssh-keys-with-github/">Using Multiple Ssh-ids With Github</a></h1>
-    
-    
-      <p class="meta">
-        
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
 
-
-
-
-<time class='entry-date' datetime='2016-10-05T21:33:37+02:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>9:33 pm</span></time>
-        
-           | <a href="/blog/2016/10/05/using-multiple-ssh-keys-with-github/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2016/10/05/using-multiple-ssh-keys-with-github/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Sometimes I need to interact with github using multiple ssh-keys.
+  
+  <entry>
+    <title type="html"><![CDATA[Using Multiple Ssh-ids With Github]]></title>
+    <link href="http://knusul.github.io/blog/2016/10/05/using-multiple-ssh-keys-with-github/"/>
+    <updated>2016-10-05T21:33:37+02:00</updated>
+    <id>http://knusul.github.io/blog/2016/10/05/using-multiple-ssh-keys-with-github</id>
+    <content type="html"><![CDATA[<p>Sometimes I need to interact with github using multiple ssh-keys.
 This is how I configure git to do it:</p>
 
 <p>Lets create new rsa key</p>
@@ -142,38 +54,15 @@ This is how I configure git to do it:</p>
 
 
 <p>Now in your project directory you should be able to git push</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/">Consuming Google AdWords Api With Akka Spray</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-05-02T19:45:22+02:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>7:45 pm</span></time>
-        
-           | <a href="/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Google AdWords Api is a very tricky beast when under heavy use.
+  <entry>
+    <title type="html"><![CDATA[Consuming Google AdWords Api With Akka Spray]]></title>
+    <link href="http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/"/>
+    <updated>2016-05-02T19:45:22+02:00</updated>
+    <id>http://knusul.github.io/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray</id>
+    <content type="html"><![CDATA[<p>Google AdWords Api is a very tricky beast when under heavy use.
 When you send too many requests per minute you get banned for 30s. Moreover the amount of queries that you cam perform varies durning the day.
 I found consuming Google AdWords Api a perfect use case for Scala Akka and Spray frameworks.
 Please take into account I&rsquo;m beginer Scala programmer and it&rsquo;s one of my very first projects in that language.
@@ -654,38 +543,15 @@ Finally GetAdwordsStats calls GoogleAdwords Api IdeaQuery and TrafficEstimation 
 </span><span class='line'>    return resultKeywords
 </span><span class='line'>  }</span></code></pre></td></tr></table></div></figure>
 
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/02/22/logging-with-docker/">Logging With Docker</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-02-22T16:59:05+01:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2016</span></span> <span class='time'>4:59 pm</span></time>
-        
-           | <a href="/blog/2016/02/22/logging-with-docker/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2016/02/22/logging-with-docker/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>There is great article how to configure centralized logging for docker with cloudwatch:</p>
+  <entry>
+    <title type="html"><![CDATA[Logging With Docker]]></title>
+    <link href="http://knusul.github.io/blog/2016/02/22/logging-with-docker/"/>
+    <updated>2016-02-22T16:59:05+01:00</updated>
+    <id>http://knusul.github.io/blog/2016/02/22/logging-with-docker</id>
+    <content type="html"><![CDATA[<p>There is great article how to configure centralized logging for docker with cloudwatch:</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>https://blogs.aws.amazon.com/application-management/post/TxFRDMTMILAA8X/Send-ECS-Container-Logs-to-CloudWatch-Logs-for-Centralized-Monitoring</span></code></pre></td></tr></table></div></figure>
@@ -760,38 +626,15 @@ Open aws cloudwatch ecs project and edit Dockerfile</p>
 
 
 
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-02-01T17:05:00+01:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>5:05 pm</span></time>
-        
-           | <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Maybe you want to hide unnecessery parameters from api or you want to modify the keys. It&rsquo;s straightforawrd with amazon gateway but it took me some time to find how to do it.
+  <entry>
+    <title type="html"><![CDATA[Modifing AWS Gateway Output Parameters]]></title>
+    <link href="http://knusul.github.io/blog/2016/02/01/modifing-aws-gateway-output-parameters/"/>
+    <updated>2016-02-01T17:05:00+01:00</updated>
+    <id>http://knusul.github.io/blog/2016/02/01/modifing-aws-gateway-output-parameters</id>
+    <content type="html"><![CDATA[<p>Maybe you want to hide unnecessery parameters from api or you want to modify the keys. It&rsquo;s straightforawrd with amazon gateway but it took me some time to find how to do it.
 Go to AWS Gateway -> Your api -> Integration Response -> Response template and change &ldquo;passthru&rdquo; to sth like</p>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -806,38 +649,15 @@ Go to AWS Gateway -> Your api -> Integration Response -> Response template and c
 
 
 <p>This will strip all other keys in a response dict and replace it with one key that&rsquo;s the value of original &lsquo;items&rsquo; key. Whoila!</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/">Raspberry PI as a Home Hotspot Powered by Telekom Hotspot</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-01-28T07:50:15+01:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>7:50 am</span></time>
-        
-           | <a href="/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>If you are living in Germany and you have phone plan covering free Telekom Hotspot usage probably you wondered, like me if its possible to broadcast signal from hotspot to home.
+  <entry>
+    <title type="html"><![CDATA[Raspberry PI as a Home Hotspot Powered by Telekom Hotspot]]></title>
+    <link href="http://knusul.github.io/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/"/>
+    <updated>2016-01-28T07:50:15+01:00</updated>
+    <id>http://knusul.github.io/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot</id>
+    <content type="html"><![CDATA[<p>If you are living in Germany and you have phone plan covering free Telekom Hotspot usage probably you wondered, like me if its possible to broadcast signal from hotspot to home.
 One function that prohibits us from using simple reapeter is the fact that Telekom hotspot has html username/password authentication. The hotspot deuthenticates the user when inactive and when token expires.
 The idea is to put 2 WIFI cards into raspberry PI. One will receive signal from hotspot. On another we will configure hostapd and dhcp server to broadacast signal at home. We will write simple script that authenticates user in Telekom hotspot using curl.</p>
 
@@ -922,39 +742,16 @@ Then write short script that will check internet connection and if there is no i
 
 
 <p>Put the script in monit or run with nohup in raspberry pi
-<img src="/images/raspberry.jpeg"></p>
-</div>
+<img src="http://knusul.github.io/images/raspberry.jpeg"></p>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/01/05/aws-lambda-the-bad-parts/">AWS Lambda. The Bad Parts</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-01-05T16:31:55+01:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>4:31 pm</span></time>
-        
-           | <a href="/blog/2016/01/05/aws-lambda-the-bad-parts/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2016/01/05/aws-lambda-the-bad-parts/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Amazon about their Lambda service: &ldquo;AWS Lambda is a zero-administration compute platform for back-end web developers that runs your code for you in the AWS cloud and provides you with a fine-grained pricing structure&rdquo;
+  <entry>
+    <title type="html"><![CDATA[AWS Lambda. The Bad Parts]]></title>
+    <link href="http://knusul.github.io/blog/2016/01/05/aws-lambda-the-bad-parts/"/>
+    <updated>2016-01-05T16:31:55+01:00</updated>
+    <id>http://knusul.github.io/blog/2016/01/05/aws-lambda-the-bad-parts</id>
+    <content type="html"><![CDATA[<p>Amazon about their Lambda service: &ldquo;AWS Lambda is a zero-administration compute platform for back-end web developers that runs your code for you in the AWS cloud and provides you with a fine-grained pricing structure&rdquo;
 I spend some time with a microservice-awslambda architecture. Here I share numerous problems I encountered:
 1) Testing/Staging env requires seperate lambda function. We can not deploy same lambda function with different version to different APIs.
 2) The Lambda environment is archaic: Node v0.9 without ECMA6 support and Python 2.7.
@@ -964,38 +761,15 @@ I spend some time with a microservice-awslambda architecture. Here I share numer
 
 <p>There are great benefits in an architecture build on Lambda functions. Unfortunately it comes in a costs.
 It might work well for very simple services but when we need to create anything more complicated than &lsquo;hello world&rsquo; its wise to move to other solution. Maybe Dockeris a thing to go. If you want to share your thoughts about Lambda AWS architecture please comment.</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/06/26/comparison-of-pdf-generation-libraries/">Comparison of PDF Generation Libraries</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-06-26T17:48:34+02:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>5:48 pm</span></time>
-        
-           | <a href="/blog/2015/06/26/comparison-of-pdf-generation-libraries/#disqus_thread"
-             data-disqus-identifier="http://knusul.github.io/blog/2015/06/26/comparison-of-pdf-generation-libraries/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Recently I investigated the possibilities of PDF generation from doc(x)
+  <entry>
+    <title type="html"><![CDATA[Comparison of PDF Generation Libraries]]></title>
+    <link href="http://knusul.github.io/blog/2015/06/26/comparison-of-pdf-generation-libraries/"/>
+    <updated>2015-06-26T17:48:34+02:00</updated>
+    <id>http://knusul.github.io/blog/2015/06/26/comparison-of-pdf-generation-libraries</id>
+    <content type="html"><![CDATA[<p>Recently I investigated the possibilities of PDF generation from doc(x)
 documents. It came up that its not that trivial.
 The goal is to have separate application that will have api to perform conversions.</p>
 
@@ -1003,126 +777,7 @@ The goal is to have separate application that will have api to perform conversio
 
 <p>Post: docx2pdf.tmh.io/templates/create?filename=name.docx # status: ok
 Get: doc2pdf.tmh.io/templates/1/pdf?placeholder1=value1&amp;placeholder2=value2  #document.pdf</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2016/10/05/using-multiple-ssh-keys-with-github/">Using Multiple Ssh-ids With Github</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/05/02/consuming-google-adwords-api-with-akka-spray/">Consuming Google AdWords Api With Akka Spray</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/02/22/logging-with-docker/">Logging With Docker</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/02/01/modifing-aws-gateway-output-parameters/">Modifing AWS Gateway Output Parameters</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/01/28/raspberry-pi-as-a-home-hotspot-powered-by-telekom-hotspot/">Raspberry PI as a Home Hotspot Powered by Telekom Hotspot</a>
-      </li>
-    
-  </ul>
-</section>
-
-<section>
-  <h1>GitHub Repos</h1>
-  <ul id="gh_repos">
-    <li class="loading">Status updating...</li>
-  </ul>
-  
-  <a href="https://github.com/knusul">@knusul</a> on GitHub
-  
-  <script type="text/javascript">
-    $(document).ready(function(){
-        if (!window.jXHR){
-            var jxhr = document.createElement('script');
-            jxhr.type = 'text/javascript';
-            jxhr.src = '/javascripts/libs/jXHR.js';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(jxhr, s);
-        }
-
-        github.showRepos({
-            user: 'knusul',
-            count: 0,
-            skip_forks: true,
-            target: '#gh_repos'
-        });
-    });
-  </script>
-  <script src="/javascripts/github.js" type="text/javascript"> </script>
-</section>
-
-
-
-
-
-  
-</aside>
-
-    </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2016 - Jakub Nieznalski -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
-
-</footer>
-  
-
-<script type="text/javascript">
-      var disqus_shortname = 'tddornottobe';
-      
-        
-        var disqus_script = 'count.js';
-      
-    (function () {
-      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
-      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-    }());
-</script>
-
-
-
-
-
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = '//platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
-
-
-
-
-
-</body>
-</html>
+</feed>
